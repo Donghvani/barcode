@@ -14,20 +14,6 @@ namespace ConsoleApp
 
         private static void TestMethod()
         {
-            var now = DateTime.Now;
-            Barcode128 code128 = new Barcode128
-            {
-                CodeType = Barcode.CODE128,
-                ChecksumText = true,
-                GenerateChecksum = true,
-                StartStopText = true,
-                //Code = "045746201627080857"
-                Code = $"{now.Year}{now.Month.ToString("00")}{now.Day.ToString("00")}{now.Hour.ToString("00")}{now.Minute.ToString("00")}{now.Second.ToString("00")}{now.Millisecond}"
-            };
-
-            var asd = "0457 4620 1627 0808 57";
-            var ass = "2019 0422 1549 22 1000";
-
             FileStream fs = new FileStream("First PDF document.pdf", FileMode.Create);
             Document document = new Document(PageSize.A4, 25, 25, 30, 30);
             PdfWriter writer = PdfWriter.GetInstance(document, fs);
@@ -39,15 +25,28 @@ namespace ConsoleApp
             document.AddTitle("Barcodes");
  
             document.Open();
-            document.Add(new Paragraph("Hello World!"));
-
-            PdfContentByte cb = writer.DirectContent;
-            var image = code128.CreateImageWithBarcode(cb, null, null);
-            document.Add(image);
+            document.Add(GetBarcodeImage(writer.DirectContent));
 
             document.Close();
             writer.Close();
             fs.Close();
+        }
+
+        private static Image GetBarcodeImage(PdfContentByte pdfContentByte)
+        {
+            var now = DateTime.Now;
+            var code = $"{now.Year}{now.Month.ToString("00")}{now.Day.ToString("00")}{now.Hour.ToString("00")}{now.Minute.ToString("00")}{now.Second.ToString("00")}{now.Millisecond}";
+
+            var code128 = new Barcode128
+            {
+                CodeType = Barcode.CODE128,
+                ChecksumText = true,
+                GenerateChecksum = true,
+                StartStopText = true,
+                Code = code
+            };
+
+            return code128.CreateImageWithBarcode(pdfContentByte, null, null);
         }
     }
 }
