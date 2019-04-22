@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
@@ -11,14 +12,17 @@ namespace ConsoleApp
     {
         static void Main(string[] args)
         {
-            TestMethod();
+            var numberOfColumns = 8;
+            var numberOfBarcodes = 256;
+            
+            GenerateBarcodes(numberOfColumns, numberOfBarcodes);
         }
 
-        private static void TestMethod()
+        private static void GenerateBarcodes(int numberOfColumns, int numberOfBarcodes)
         {
-            FileStream fs = new FileStream("First PDF document.pdf", FileMode.Create);
-            Document document = new Document(PageSize.A4, 5, 5, 5, 5);
-            PdfWriter writer = PdfWriter.GetInstance(document, fs);
+            var fs = new FileStream("First PDF document.pdf", FileMode.Create);
+            var document = new Document(PageSize.A4, 0, 0, 0, 0);
+            var writer = PdfWriter.GetInstance(document, fs);
 
             document.AddAuthor("Vito Donghvani");
             document.AddCreator("Barcode generator");
@@ -27,11 +31,23 @@ namespace ConsoleApp
             document.AddTitle("Barcodes");
 
             document.Open();
-            foreach (var image in GetBarcodeImages(writer.DirectContent, 24))
+                        
+            var pdfTable = new PdfPTable(numberOfColumns)
             {
-                document.Add(image);
+                HorizontalAlignment = Element.ALIGN_LEFT                
+            };
+            var columnWidth = PageSize.A4.Width / numberOfColumns;           
+            var asd = Enumerable.Repeat(columnWidth, numberOfColumns).ToArray();
+            
+            pdfTable.SetTotalWidth(asd);
+            pdfTable.LockedWidth = true;
+
+            foreach (var image in GetBarcodeImages(writer.DirectContent, numberOfBarcodes))
+            {             
+                pdfTable.AddCell(image);
             }
 
+            document.Add(pdfTable);
             document.Close();
             writer.Close();
             fs.Close();
@@ -40,7 +56,8 @@ namespace ConsoleApp
         private static Image GetBarcodeImage(PdfContentByte pdfContentByte)
         {
             var now = DateTime.Now;
-            var code = $"{now.Year}{now.Month.ToString("00")}{now.Day.ToString("00")}{now.Hour.ToString("00")}{now.Minute.ToString("00")}{now.Second.ToString("00")}{now.Millisecond.ToString("0000")}";
+            var code = 
+                $"{now.Year}{now.Month:00}{now.Day:00}{now.Hour:00}{now.Minute:00}{now.Second:00}{now.Millisecond:0000}";
 
             var code128 = new Barcode128
             {
