@@ -12,5 +12,8 @@ Generate optimal layout single page pdf file with unique barcodes to be printed 
 * First argument - file name
 * Second argument - number of columns
 
-## Sample
-![Image of Yaktocat](https://github.com/Donghvani/barcode/blob/master/ConsoleApp/sample/image/barcodes.png)
+## Sample screenshot
+![Sample image barcodes](https://github.com/Donghvani/barcode/blob/master/ConsoleApp/sample/image/barcodes.png)
+
+## A4 label paper for laser printer
+![A4 label paper for laser printer](https://github.com/Donghvani/barcode/blob/master/ConsoleApp/sample/image/sticker_paper.jpg)
