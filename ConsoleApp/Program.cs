@@ -12,45 +12,59 @@ namespace ConsoleApp
     {
         static void Main(string[] args)
         {
-            var numberOfColumns = 8;
-            var numberOfBarcodes = 256;
+            //args = new[] {"barcodes.pdf", "6"};
             
-            GenerateBarcodes(numberOfColumns, numberOfBarcodes);
+            if (args.Length == 0) return;
+            
+            var fileName = args[0];
+            int.TryParse(args[1], out var numberOfColumns);
+            
+            GenerateBarcodes(fileName, numberOfColumns);
         }
 
-        private static void GenerateBarcodes(int numberOfColumns, int numberOfBarcodes)
-        {
-            var fs = new FileStream("First PDF document.pdf", FileMode.Create);
-            var document = new Document(PageSize.A4, 0, 0, 0, 0);
-            var writer = PdfWriter.GetInstance(document, fs);
+        private static void GenerateBarcodes(string fileName, int numberOfColumns)
+        {            
+            using (var fs = new FileStream(fileName, FileMode.Create))
+            {                
+                var document = new Document(PageSize.A4, 0, 0, 0, 0);                            
+                var writer = PdfWriter.GetInstance(document, fs);
 
-            document.AddAuthor("Vito Donghvani");
-            document.AddCreator("Barcode generator");
-            document.AddKeywords("PDF Barcode 128");
-            document.AddSubject("Barcode generation");
-            document.AddTitle("Barcodes");
+                //TODO: Move out
+                document.AddAuthor("Vito Donghvani");
+                document.AddCreator("Barcode generator");
+                document.AddKeywords("PDF Barcode 128");
+                document.AddSubject("Barcode generation");
+                document.AddTitle("Barcodes");
 
-            document.Open();
-                        
-            var pdfTable = new PdfPTable(numberOfColumns)
-            {
-                HorizontalAlignment = Element.ALIGN_LEFT                
-            };
-            var columnWidth = PageSize.A4.Width / numberOfColumns;           
-            var asd = Enumerable.Repeat(columnWidth, numberOfColumns).ToArray();
-            
-            pdfTable.SetTotalWidth(asd);
-            pdfTable.LockedWidth = true;
+                document.Open();
+                
+                var pdfTable = new PdfPTable(numberOfColumns)
+                {
+                    HorizontalAlignment = Element.ALIGN_LEFT,
+                    TotalWidth = PageSize.A4.Width, 
+                    LockedWidth = true
+                };
 
-            foreach (var image in GetBarcodeImages(writer.DirectContent, numberOfBarcodes))
-            {             
-                pdfTable.AddCell(image);
+                var tableTotalHeight = 0f;
+                var difference = 0f;
+                
+                do
+                {
+                    var image = GetBarcodeImage(writer.DirectContent);
+                    //Console.WriteLine($"{pdfTable.TotalHeight} {PageSize.A4.Height}");
+                    pdfTable.AddCell(image);
+
+                    difference = pdfTable.TotalHeight - tableTotalHeight;
+                    tableTotalHeight = pdfTable.TotalHeight;
+                    Thread.Sleep(1);
+                } while (pdfTable.TotalHeight + difference <= PageSize.A4.Height);                          
+
+                Console.WriteLine($"Required row height = {difference}; Last row height = {PageSize.A4.Height - pdfTable.TotalHeight}");
+                
+                document.Add(pdfTable);
+                document.Close();
+                writer.Close();
             }
-
-            document.Add(pdfTable);
-            document.Close();
-            writer.Close();
-            fs.Close();
         }
 
         private static Image GetBarcodeImage(PdfContentByte pdfContentByte)
