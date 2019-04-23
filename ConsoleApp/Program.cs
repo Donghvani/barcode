@@ -18,11 +18,13 @@ namespace ConsoleApp
             var fileName = args[0];
             int.TryParse(args[1], out var numberOfColumns);
             
-            GenerateBarcodes(fileName, numberOfColumns);
+            var barcodes = GenerateBarcodes(fileName, numberOfColumns);
+            Console.WriteLine($"Generated: {barcodes}");
         }
 
-        private static void GenerateBarcodes(string fileName, int numberOfColumns)
-        {            
+        private static int GenerateBarcodes(string fileName, int numberOfColumns)
+        {
+            var result = 0;
             using (var fs = new FileStream(fileName, FileMode.Create))
             {                
                 var document = new Document(PageSize.A4, 0, 0, 0, 0);                            
@@ -49,6 +51,7 @@ namespace ConsoleApp
                 
                 do
                 {
+                    result++;
                     var image = GetBarcodeImage(writer.DirectContent);
                     //Console.WriteLine($"{pdfTable.TotalHeight} {PageSize.A4.Height}");
                     pdfTable.AddCell(image);
@@ -64,13 +67,15 @@ namespace ConsoleApp
                 document.Close();
                 writer.Close();
             }
+
+            return result;
         }
 
         private static Image GetBarcodeImage(PdfContentByte pdfContentByte)
         {
             var now = DateTime.Now;
             var code = 
-                $"{now.Year}{now.Month:00}{now.Day:00}{now.Hour:00}{now.Minute:00}{now.Second:00}{now.Millisecond:0000}";
+                $"{now:yy}{now.Month:00}{now.Day:00}{now.Hour:00}{now.Minute:00}{now.Second:00}{now.Millisecond:0000}";
 
             var code128 = new Barcode128
             {
